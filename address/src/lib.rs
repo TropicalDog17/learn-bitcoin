@@ -2,6 +2,14 @@ use bitcoin::secp256k1::{rand, Secp256k1};
 use bitcoin::{Address, Network, PrivateKey, PublicKey};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
+pub fn random_address() -> Address {
+    let s = Secp256k1::new();
+    let keypair = s.generate_keypair(&mut rand::thread_rng());
+    let public_key = PublicKey::new(keypair.1);
+    let address = Address::p2pkh(&public_key, Network::Bitcoin);
+
+    address
+}
 fn calculate_p2pkh_address(public_key: &[u8], network_prefix: u8) -> String {
     // reference: Mastering Bitcoin, p.102
     // Step 1: Calculate SHA256 hash of the public key
