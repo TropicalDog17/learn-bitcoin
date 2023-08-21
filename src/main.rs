@@ -3,32 +3,39 @@ use bitcoin::{Address, Network, PrivateKey, PublicKey};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
 fn calculate_p2pkh_address(public_key: &[u8], network_prefix: u8) -> String {
-    // Step 1: Calculate SHA256 hash of the public key
-    // // Step 2: Calculate RIPEMD160 hash of the SHA256 result
-    // // Step 3: Create the extended hash with the network prefix byte
-    // // Step 4: Calculate the double SHA256 checksum
-    // // Step 5: Append the first 4 bytes of the checksum to the extended hash
-    // // Step 6: Encode the extended hash plus checksum using Base58 encoding
     // reference: Mastering Bitcoin, p.102
-    let mut hasher = Sha256::new();
-    hasher.update(public_key);
-    let result = hasher.finalize();
-    let mut hasher = Ripemd160::new();
-    hasher.update(result);
-    let result = hasher.finalize();
-    let mut extended_hash = vec![network_prefix];
-    extended_hash.extend(result);
+    // Step 1: Calculate SHA256 hash of the public key
 
+    let mut sha256_hasher = Sha256::new();
+    sha256_hasher.update(public_key);
+    let sha256_hash = sha256_hasher.finalize();
+    // Step 2: Calculate RIPEMD160 hash of the SHA256 result
+
+    let mut ripemd160_hasher = Ripemd160::new();
+    ripemd160_hasher.update(sha256_hash);
+    let pub_key_hash = ripemd160_hasher.finalize();
+
+    // Step 3: Base58Check Encode
+
+    // Extend the public key hash with prefix value of network_prefix(e.g: Bitcoin: 0x00);
+    let mut extended_hash = vec![network_prefix];
+    extended_hash.extend(pub_key_hash);
+
+    // Calculate the double SHA256 checksum of the extended hash
     let mut checksum_hasher = Sha256::new();
     checksum_hasher.update(&extended_hash);
     let checksum_result = checksum_hasher.finalize();
     let mut checksum_hasher = Sha256::new();
     checksum_hasher.update(&checksum_result);
     let checksum_result = checksum_hasher.finalize();
+
+    // Append the first 4 bytes of the checksum to the extended hash
     extended_hash.extend(&checksum_result[0..4]);
+
+    //Encode the extended hash plus checksum using Base58 encoding
     let s = bs58::encode(extended_hash).into_string();
+
     s
-    // bitcoin_address
 }
 
 fn main() {
