@@ -9,3 +9,4 @@ edition = "2021"
 bitcoin = { version = "0.30.1", features = ["rand-std"] }
 address = { path = "../address" }
 time-test = "0.2.3"
+thiserror = "1.0.47"
